@@ -9,12 +9,7 @@ def _todo(number: int) -> str:
     return f"-- TODO: 問題 {number:02d} のSQLをここに書いてください"
 
 
-def q01_select_all_products() -> str:
-    return """
-    SELECT * FROM Products
-    ORDER BY ProductId;
-    """
-
+def q01_select_all_products() -> str: return _todo(1)
 def q02_select_product_columns() -> str: return _todo(2)
 def q03_active_products() -> str: return _todo(3)
 def q04_products_in_price_range() -> str: return _todo(4)
