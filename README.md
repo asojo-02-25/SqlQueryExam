@@ -41,8 +41,8 @@ uv run python -m unittest discover -s tests -v
 自分の解答をテストするには対象モジュールを切り替えます。
 
 ```bash
-SQL_EXAM_MODULE=sqlquery_exam.exercises \
-  uv run python -m unittest tests.test_queries -v
+$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
+uv run python -m unittest tests.test_queries -v
 ```
 
 未回答の関数には `TODO` があるため、契約テストは未回答数を表示して失敗します。
@@ -77,22 +77,55 @@ uv run python scripts/init_db.py
 SQL Server に対して参照解答の検索問題を実行するには:
 
 ```bash
-SQLSERVER_TESTS=1 \
-  uv run python -m unittest tests.test_database -v
+$env:SQLSERVER_TESTS = "1"
+uv run python -m unittest tests.test_database -v
+
 ```
 
 自分の解答を実行するには:
 
 ```bash
-SQLSERVER_TESTS=1 SQL_EXAM_MODULE=sqlquery_exam.exercises \
-  uv run python -m unittest tests.test_database -v
+$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
+uv run python -m unittest tests.test_database -v
 ```
+## 各問題のテスト方法
+
+検索問題（問題1〜20）は、回答した関数だけを実行して結果を確認できます。
+次の `q01_select_all_products` を、`catalog.py` にある確認したい問題の関数名に
+置き換えてください。
+
+```bash
+uv run python -c "from sqlquery_exam.db import fetch_all; from sqlquery_exam.exercises import q01_select_all_products; print(*fetch_all(q01_select_all_products()), sep='\n')"
+```
+
+例えば問題2を確認する場合は、`q01_select_all_products` の2か所を
+`q02_select_product_columns` に置き換えます。このコマンドは自分のSQLを
+SQL Serverで実行し、取得した各行を表示します。実行前に「何行・何列になり、
+どの順番で並ぶか」を予想してから結果を確認してください。
+
+また、以下のコマンドより全選択時のラベルを出力、現在の問題との比較を行い、ソートの正確性を確認してください。
+
+```bash
+uv run python -c "from sqlquery_exam.db import fetch_all; print(*fetch_all('SELECT * FROM Products'), sep='\n')"
+```
+
+README中の環境変数を伴うコマンドは Bash 用です。Windows PowerShell では
+次のように環境変数を設定してから実行します。
+
+```powershell
+$env:SQLSERVER_TESTS = "1"
+$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
+uv run python -m unittest tests.test_database -v
+```
+
+全問用の `unittest` は未回答の `TODO` がある間は失敗します。学習途中では、
+まず上記の個別実行で確認し、解答がそろってから全体テストを実行してください。
 
 更新系の問題21〜27は、誤操作を避けるため自動統合テストから除外しています。
 SQL Server Management Studio などで `BEGIN TRANSACTION` を開始し、結果を
 `SELECT` で確認してから `ROLLBACK` してください。
 
-## pymssql のパラメータ
+## pymssql のパラメータ (21問目以降で使用)
 
 値を文字列結合でSQLへ埋め込まず、次のように別途渡します。
 
