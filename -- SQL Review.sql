@@ -150,7 +150,7 @@ SELECT * FROM 注文履歴 WHERE 日付 < '2024-01-01' ORDER BY 商品名 ASC;
 SELECT 注文番号, 注文枝番, 注文金額 FROM 注文履歴 WHERE 分類 = 1 ORDER BY 注文金額 OFFSET 1 ROWS FETCH NEXT 3 ROWS ONLY;
 
 -- 4. 
-SELECT 日付, 商品名、単価, 数量, 注文金額 FROM 注文履歴 WHERE 分類 = 3 AND 数量 >= 2 ORDER BY 数量 DESC;
+SELECT 日付, 商品名, 単価, 数量, 注文金額 FROM 注文履歴 WHERE 分類 = 3 AND 数量 >= 2 ORDER BY 数量 DESC;
 
 -- 5. 
 SELECT 分類, 商品名, サイズ, 単価 FROM 註文履歴 WHERE 分類 = 1
@@ -264,4 +264,16 @@ SELECT COUNT(*) - COUNT(退室) AS 入室中 FROM 入退室管理;
 SELECT COUNT(社員名) AS 入室回数 FROM 入退室管理 GROUP BY 社員名 ORDER BY 1 DESC;
 
 -- 3.
-SELECT 
+SELECT
+CASE 事由区分 
+    WHEN '1' THEN 'メンテナンス'
+    WHEN '2' THEN 'リリース作業'
+    WHEN '3' THEN '障害対応'
+    WHEN '9' THEN 'その他' END,
+COUNT(事由区分) AS 事由区分ごとの入室回数 FROM 入退室管理 GROUP BY 入室事由;
+
+-- 4. 
+SELECT 社員名, COUNT(*) AS 入室回数 FROM 入退室管理 GROUP BY 社員名 HAVING COUNT(*) > 10;
+
+-- 5. 
+SELECT 日付, COUNT(*) AS 社員数 FROM 入退室管理 WHERE 事由区分 = '3' GROUP BY 日付;

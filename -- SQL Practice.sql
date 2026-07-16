@@ -8,7 +8,7 @@ SELECT * FROM tbl_Branch
 
 SELECT * FROM dbo.tbl_Branch WHERE BranchID > 10;
 
--- 3.2 BranchCode > 100 のラベルを削除
+-- 3.2 BranchCode > 100 のラベルを削除dbo
 
 BEGIN TRAN;
 
@@ -190,3 +190,37 @@ FROM dbo.tbl_Branch;
 
 SELECT SUM(COALESCE(FAX2, 0)), AVG(COALESCE(FAX2, 0)), MAX(COALESCE(FAX2, 0)), MIN(COALESCE(FAX2, 0))
 FROM dbo.tbl_Branch;
+
+-- 7.6 練習問題
+
+-- 7-3
+
+-- 1.
+INSERT INTO 頭数集計テーブル (飼育県, 頭数) SELECT 飼育県, COUNT(*) FROM 個体識別テーブル GROUP BY 飼育県;
+
+-- 2. 
+SELECT 県名 AS 都道府県名, 個体識別番号,
+CASE 雌雄コード 
+    WHEN '1' THEN '雄'
+    WHEN '2' THEN '雌' END AS 雌雄, 
+FROM 個体識別 
+WHERE 県名 IN (SELECT 県名 FROM 頭数集計 ORDER BY 頭数 DESC OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY;) 
+
+-- 3. 
+SELECT 都道府県名, 個体識別番号,
+CASE 品種 
+    WHEN '01' THEN '乳用種'
+    WHEN '02' THEN '肉用種'
+    WHEN '03' THEN '交雑種' END AS 品種, 
+出生日, 母牛番号 
+FROM 個体識別 WHERE 品種コード IN (SELECT 個体識別番号 FROM 個体識別 WHERE 品種コード = '01')
+
+-- 8.6 練習問題
+
+-- 8-2
+
+-- 1.
+SELECT 社員番号, 社員.名前 AS 名前, 部署.名前 AS 部署名 FROM 社員 JOIN 部署 ON 社員.部署ID = 部署.部署ID;
+
+-- 2. 
+SELECT A.社員番号, A.名前, B.名前 AS 上司名 FROM 社員 AS A LEFT JOIN 社員 AS B ON A.上司ID = B.社員番号
