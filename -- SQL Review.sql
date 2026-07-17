@@ -211,9 +211,9 @@ SELECT TRIM(メールアドレス) AS メールアドレス, CONCAT(
 FROM 回答者 
 WHERE 年齢 BETWEEN 20 AND 59;
 
- -- 5-3
+-- 5-3
 
- -- 1. 
+-- 1. 
 UPDATE 受注テーブル SET 文字列 = LEN(REPLACE(文字, ' ', ''));
 
 -- 2. 
@@ -277,3 +277,31 @@ SELECT 社員名, COUNT(*) AS 入室回数 FROM 入退室管理 GROUP BY 社員�
 
 -- 5. 
 SELECT 日付, COUNT(*) AS 社員数 FROM 入退室管理 WHERE 事由区分 = '3' GROUP BY 日付;
+
+-- 7.6 練習問題
+
+-- 7-3
+
+-- 1. 
+INSERT INTO 頭数集計(飼育県, 頭数) SELECT 飼育県, COUNT(個体識別番号) AS 頭数 FROM 個体識別 GROUP BY 飼育県;
+
+-- 2. 
+SELECT 県名 AS 都道府県名, 個体識別番号, 
+CASE 雌雄 
+    WHEN '1' THEN '雄'
+    WHEN '2' THEN '雌' END
+FROM 個体識別 
+WHERE EXISTS 
+    (SELECT 1 FROM 頭数集計 
+    WHERE 個体識別.飼育県 = 頭数集計.飼育県 
+    ORDER BY 頭数 
+    OFFSET 0 ROWS FETCH FIRST 3 ROWS ONLY);
+
+-- 3. 
+SELECT 個体識別番号, 
+CASE 品種 
+    WHEN '01' THEN '乳用種'
+    WHEN '02' THEN '肉用種'
+    WHEN '03' THEN '交雑種' END, 
+出生日, 母牛番号 FROM 個体識別
+WHERE 母牛番号 IN (SELECT 個体識別番号 FROM 個体識別 WHERE 品種コード = '01');
