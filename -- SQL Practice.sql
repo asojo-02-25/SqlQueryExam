@@ -164,7 +164,7 @@ CASE
 
 CASE 住居
     WHEN C THEN '集合住宅'
-    WHEN D THEN '戸建て' END AS 属性
+    WHEN D THEN '戸建て' END) AS 属性
 
 FROM 回答者
 
@@ -202,7 +202,7 @@ INSERT INTO 頭数集計テーブル (飼育県, 頭数) SELECT 飼育県, COUNT
 SELECT 県名 AS 都道府県名, 個体識別番号,
 CASE 雌雄コード 
     WHEN '1' THEN '雄'
-    WHEN '2' THEN '雌' END AS 雌雄, 
+    WHEN '2' THEN '雌' END AS 雌雄
 FROM 個体識別 
 WHERE 県名 IN (SELECT 県名 FROM 頭数集計 ORDER BY 頭数 DESC OFFSET 0 ROWS FETCH NEXT 3 ROWS ONLY;) 
 
@@ -224,3 +224,30 @@ SELECT 社員番号, 社員.名前 AS 名前, 部署.名前 AS 部署名 FROM �
 
 -- 2. 
 SELECT A.社員番号, A.名前, B.名前 AS 上司名 FROM 社員 AS A LEFT JOIN 社員 AS B ON A.上司ID = B.社員番号
+
+-- 3. 
+SELECT A.社員番号, A.名前, B.名前 AS 部署名, C.名前 AS 支店 
+FROM 社員 AS A 
+    JOIN 部署 AS B 
+    ON A.部署ID = B.部署ID 
+    JOIN 支店 AS C 
+    ON A.勤務地ID = C.支店ID;
+
+-- 4. 
+SELECT B.支店ID AS 支店コード, B.名前 AS 支店名, E.名前 AS 支店長名, C.社員数
+FROM 支店 AS B 
+    JOIN 社員 AS E
+    ON B.支店長ID = E.社員番号
+    JOIN (SELECT E.勤務地ID, COUNT(社員番号) FROM 社員 GROUP BY E.勤務地ID) AS C
+    ON B.支店ID = C.勤務地ID;
+
+-- 5. 
+SELECT E1.社員番号, E1.名前, B1.名前 AS 本人勤務地, B2.名前 AS 上司勤務地 
+FROM 社員 AS E1
+    JOIN 社員 AS E2
+    ON E1.上司ID = E2.社員番号
+    AND E1.勤務地ID <> E2.勤務地ID
+    JOIN 支店 AS B1 
+    ON E1.勤務地ID = B1.支店ID 
+    JOIN 支店 AS B2 
+    ON E2.勤務地ID = B2.支店ID
