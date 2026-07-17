@@ -251,3 +251,52 @@ FROM 社員 AS E1
     ON E1.勤務地ID = B1.支店ID 
     JOIN 支店 AS B2 
     ON E2.勤務地ID = B2.支店ID
+
+-- 9.5
+
+-- 1. 
+BEGIN TRANSACTION;
+
+INSERT INTO 家計簿 VALUES ('2024-03-20', '住居費', '4月の家賃', 0, 60000);
+
+INSERT INTO 家計簿 VALUES ('2024-03-20', '手数料', '4月の家賃の振り込み', 0, 420);
+
+COMMIT;
+
+-- 2. 
+BEGIN TRANSACTION;
+DELETE FROM 家計簿 WHERE 日付 = '2024-03-20';
+ROLLBACK;
+
+-- 3. 
+BEGIN TRANSACTION;
+LOCK TABLE 家計簿 IN EXCLUSIVE MODE;
+INSERT INTO 統計結果 SELECT 'データ件数', COUNT(*) FROM 家計簿;
+INSERT INTO 統計結果 SELECT '出金額平均', AVG(出金額) FROM 家計簿;
+COMMIT;
+
+-- 9.6 練習問題
+BEGIN TRANSACTION;
+INSERT INTO 受注 (注文番号, 日付, 顧客番号, 商品番号, 注文数)
+    VALUES ('1192296', '2024-03-20', '8828', '0008', 12);
+
+UPDATE 在庫 SET 残数 = 残数 - 12 WHERE 商品番号 = '0008';
+COMMIT;
+
+-- 10.2
+
+CREATE TABLE 家計簿(
+    日付    DATE            NOT NULL,
+    費用ID  INTEGER         PRIMARY KEY,
+    外部ID  INTEGER         REFERENCES 費用(ID), 
+    メモ    VARCHAR(100)    DEFAULT '不明' NOT NULL,
+    入金額  INTEGER         DEFAULT 0 CHECK (入金額 >= 0),
+    出金額  INTEGER         DEFAULT 0 CHECK (出金額 >= 0)
+)
+
+SELECT * FROM 家計簿;
+
+ALTER TABLE 家計簿 ADD 関連日 DATE;
+ALTER TABLE 家計簿 DROP COLUMN 関連日;
+
+DROP TABLE IF EXISTS 家計簿;
