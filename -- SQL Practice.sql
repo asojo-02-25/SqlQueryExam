@@ -300,3 +300,24 @@ ALTER TABLE 家計簿 ADD 関連日 DATE;
 ALTER TABLE 家計簿 DROP COLUMN 関連日;
 
 DROP TABLE IF EXISTS 家計簿;
+
+-- 11.5 練習問題
+
+-- 11-2 
+
+-- 1. 
+CREATE INDEX 学生IDX ON 名前;       -- WHERE句の検索に利用
+CREATE INDEX 学部IDX ON 学部ID;     -- JOIN句の結合に利用
+
+-- 2.
+CREATE VIEW 学部付き学生 AS 
+    SELECT S.学籍番号, S.名前, S.生年月日, S.血液型, S.学部ID, S.登録順, B.名前 AS 学部
+        FROM 学生 AS S
+        JOIN 学部 AS B 
+        ON S.学部ID = B.ID;
+
+-- 3. 
+INSERT INTO 学生(学籍番号, 名前, 生年月日, 血液型, 学部ID, 登録順)
+    VALUES(B1101022, '古島進', '2004-02-12', 'A', 'K', 
+    (SELECT NEXTVAL ('ISTD')))
+
