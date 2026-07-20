@@ -14,10 +14,27 @@ def q01_select_all_products() -> str:
     SELECT * FROM Products
     ORDER BY ProductId;
     """
-def q02_select_product_columns() -> str: return _todo(2)
-def q03_active_products() -> str: return _todo(3)
-def q04_products_in_price_range() -> str: return _todo(4)
-def q05_product_name_search() -> str: return _todo(5)
+def q02_select_product_columns() -> str:
+    return """ 
+    SELECT ProductName, UnitPrice FROM Products
+    ORDER BY ProductName ASC;
+    """ 
+def q03_active_products() -> str:
+    return """
+    SELECT ProductId, ProductName, UnitPrice FROM Products
+    WHERE isActive = 1
+    """
+def q04_products_in_price_range() -> str: 
+    return """
+    SELECT ProductId, ProductName, UnitPrice FROM Products
+    WHERE UnitPrice BETWEEN 1000 AND 5000
+    ORDER BY UnitPrice DESC;
+    """
+def q05_product_name_search() -> str: 
+    return """
+    SELECT ProductId, ProductName FROM Products 
+    WHERE ProductName LIKE '%SQL%';
+    """
 def q06_distinct_customer_cities() -> str: return _todo(6)
 def q07_recent_orders() -> str: return _todo(7)
 def q08_customer_display_name() -> str: return _todo(8)
