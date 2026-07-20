@@ -305,3 +305,68 @@ CASE 品種
     WHEN '03' THEN '交雑種' END, 
 出生日, 母牛番号 FROM 個体識別
 WHERE 母牛番号 IN (SELECT 個体識別番号 FROM 個体識別 WHERE 品種コード = '01');
+
+-- 9.6 練習問題
+
+-- 9-2
+
+-- 2. 
+-- SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN TRANSACTION;
+
+INSERT INTO 受注(注文番号, 日付, 顧客番号, 商品番号, 注文数)
+    VALUES ('1192296', '2024-04-08', '8828', '0008', 12);
+UPDATE 在庫 SET 残数 = 残数 - 12
+    WHERE 商品番号 = '0008' AND 残数 >= 12;
+
+COMMIT;
+
+-- 9-3 
+BEGIN TRANSACTION;
+
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+UPDATE 受注統計
+    SET 統計値 = (SELECT COUNT(*) FROM 受注)
+    WHERE 項目名 = '注文回数';
+
+UPDATE 受注統計
+    SET 統計値 = (SELECT AVG(注文数) FROM 受注)
+    WHERE 項目名 = '平均受注数';
+
+UPDATE 受注統計
+    SET 統計値 = 20240413
+    WHERE 項目名 = '統計実施日';
+
+COMMIT;
+
+-- 10.6
+
+-- 10-2
+CREATE TABLE 学部(
+    ID CHAR(1) PRIMARY KEY,
+    名前 VARCHAR(20) NOT NULL UNIQUE,
+    備考 VARCHAR(100) DEFAULT '特になし' NOT NULL
+)
+
+-- 10-3
+CREATE TABLE 学生(
+    学籍番号    CHAR(8) PRIMARY KEY,
+    名前        VARCHAR(30) NOT NULL,
+    生年月日    DATE NOT NULL,
+    血液型      CHAR(2) CHECK(血液型 = 'A' OR 血液型 = 'B' OR 血液型 = 'O' OR 血液型 = 'AB' OR 血液型 IS NULL),
+    学部ID      CHAR(1) REFERENCES 学部(ID)
+)
+
+SELECT * FROM 学生;
+
+-- 10-5
+BEGIN TRANSACTION;
+
+UPDATE 学生 SET 学部ID = 'K' WHERE 学部ID = 'R';
+
+UPDATE 学部 SET ID = 'K' WHERE ID = 'R'
+
+COMMIT;
+
+DROP TABLE 学生;
