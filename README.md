@@ -88,6 +88,15 @@ uv run python -m unittest tests.test_database -v
 $env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
 uv run python -m unittest tests.test_database -v
 ```
+README中の環境変数を伴うコマンドは Bash 用です。Windows PowerShell では
+次のように環境変数を設定してから実行します。
+
+```powershell
+$env:SQLSERVER_TESTS = "1"
+$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
+uv run python -m unittest tests.test_database -v
+```
+
 ## 各問題のテスト方法
 
 検索問題（問題1〜20）は、回答した関数だけを実行して結果を確認できます。
@@ -107,15 +116,6 @@ SQL Serverで実行し、取得した各行を表示します。実行前に「�
 
 ```bash
 uv run python -c "from sqlquery_exam.db import fetch_all; print(*fetch_all('SELECT * FROM Products'), sep='\n')"
-```
-
-README中の環境変数を伴うコマンドは Bash 用です。Windows PowerShell では
-次のように環境変数を設定してから実行します。
-
-```powershell
-$env:SQLSERVER_TESTS = "1"
-$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
-uv run python -m unittest tests.test_database -v
 ```
 
 全問用の `unittest` は未回答の `TODO` がある間は失敗します。学習途中では、
