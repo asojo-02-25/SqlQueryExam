@@ -14,37 +14,102 @@ def q01_select_all_products() -> str:
     SELECT * FROM Products
     ORDER BY ProductId;
     """
+
 def q02_select_product_columns() -> str:
     return """ 
     SELECT ProductName, UnitPrice FROM Products
     ORDER BY ProductName ASC;
-    """ 
+    """
+ 
 def q03_active_products() -> str:
     return """
     SELECT ProductId, ProductName, UnitPrice FROM Products
     WHERE isActive = 1
     """
+
 def q04_products_in_price_range() -> str: 
     return """
     SELECT ProductId, ProductName, UnitPrice FROM Products
     WHERE UnitPrice BETWEEN 1000 AND 5000
     ORDER BY UnitPrice DESC;
     """
+
 def q05_product_name_search() -> str: 
     return """
     SELECT ProductId, ProductName FROM Products 
     WHERE ProductName LIKE '%SQL%';
     """
-def q06_distinct_customer_cities() -> str: return _todo(6)
-def q07_recent_orders() -> str: return _todo(7)
-def q08_customer_display_name() -> str: return _todo(8)
-def q09_order_amounts() -> str: return _todo(9)
-def q10_products_with_category() -> str: return _todo(10)
-def q11_customers_and_orders() -> str: return _todo(11)
-def q12_order_detail_report() -> str: return _todo(12)
-def q13_product_count_by_category() -> str: return _todo(13)
-def q14_order_total_by_order() -> str: return _todo(14)
-def q15_large_order_customers() -> str: return _todo(15)
+
+def q06_distinct_customer_cities() -> str:
+    return """
+    SELECT DISTINCT City FROM Customers
+    WHERE City IS NOT NULL
+    ORDER BY City; 
+    """
+
+def q07_recent_orders() -> str: 
+    return """
+    SELECT * FROM Orders
+    ORDER BY OrderDate Desc
+    OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
+    """
+
+def q08_customer_display_name() -> str: 
+    return """
+    SELECT CustomerId, CONCAT(LastName, ' ', FirstName) AS DisplayName FROM Customers; 
+    """
+
+def q09_order_amounts() -> str: 
+    return """
+    SELECT OrderId, ProductId, Quantity, UnitPrice, (Quantity * UnitPrice) AS LineAmount FROM OrderDetails;
+    """
+
+def q10_products_with_category() -> str: 
+    return """
+    SELECT P.ProductId, P.ProductName, C.CategoryName 
+    FROM Products AS P
+    JOIN Categories AS C
+    ON P.CategoryId = C.CategoryId
+    """
+
+def q11_customers_and_orders() -> str: 
+    return """
+    SELECT C.CustomerId, C.LastName, C.FirstName, O.OrderId, O.OrderDate 
+    FROM Customers AS C
+    LEFT JOIN Orders AS O
+    ON C.CustomerId = O.CustomerId
+    """
+
+def q12_order_detail_report() -> str: 
+    return """
+    SELECT O.OrderId, P.ProductName, O.Quantity, O.UnitPrice, (O.Quantity * O.UnitPrice) AS LineAmount
+    FROM OrderDetails AS O
+    JOIN Products AS P
+    ON O.ProductId = P.ProductId;
+    """
+
+def q13_product_count_by_category() -> str: 
+    return """
+    SELECT CategoryId, CategoryName, COUNT(*) AS ProductCount FROM Products GROUP BY CategoryId;
+    """
+
+def q14_order_total_by_order() -> str: 
+    return """
+    SELECT OrderId, SUM(Quantity * UnitPrice) AS OrderTotal FROM OrderDetails GROUP BY OrderId;
+    """
+
+def q15_large_order_customers() -> str: 
+    return """
+    SELECT C.CustomerId, C.LastName, C.FirstName, SUM(OD.Quantity * OD.UnitPrice) AS TotalAmount
+    FROM Customers AS C
+    JOIN Orders AS O
+    ON C.CustomerId = O.CustomerId
+    JOIN OrderDetails AS OD
+    ON O.OrderId = OD.OrderId
+    GROUP BY C.CustomerId
+    HAVING SUM(OD.Quantity * OD.UnitPrice) >= 10000;
+    """
+
 def q16_products_above_average_price() -> str: return _todo(16)
 def q17_customers_without_orders() -> str: return _todo(17)
 def q18_rank_products_by_category() -> str: return _todo(18)
