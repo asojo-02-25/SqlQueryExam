@@ -21,7 +21,7 @@
 
 ## セットアップ
 
-```bash
+```powershell
 uv sync
 uv run python scripts/list_problems.py
 ```
@@ -30,35 +30,13 @@ uv run python scripts/list_problems.py
 `exercises.py` を編集します。問題21だけは SQL インジェクションを避けるため、
 pymssql の名前付きプレースホルダーをSQL内に記述します。
 
-## テスト
-
-まず、教材と参照解答が正常であることを確認します。
-
-```bash
-uv run python -m unittest discover -s tests -v
-```
-
-自分の解答をテストするには対象モジュールを切り替えます。
-
-```bash
-$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
-uv run python -m unittest tests.test_queries -v
-```
-
-未回答の関数には `TODO` があるため、契約テストは未回答数を表示して失敗します。
-まず問題を実装し、問題一覧と失敗した `subTest` の番号を照合してください。
-
-標準の高速テストはデータベースを必要とせず、関数の存在、戻り値、
-命令の種類、パラメータ化を検査します。SQLとしての実行結果は次の統合テストで
-参照解答と比較します。
-
 ## SQL Server 接続
 
 接続情報は環境変数で設定します。パスワードをソースコードへ保存しないでください。
 プロジェクト直下の `.env` も自動的に読み込みます。OS環境変数と `.env` の両方に
 同じ設定がある場合は、OS環境変数を優先します。
 
-```bash
+```dotenv
 SQLSERVER_HOST=localhost
 SQLSERVER_PORT=1433
 SQLSERVER_USER=sa
@@ -70,26 +48,42 @@ SQLSERVER_LOGIN_TIMEOUT=10
 `sqlquery_exam/config.py` の `DatabaseConfig` がこれらを読み込みます。
 初期データは学習用データベースを削除せず、テーブルを再作成します。
 
-```bash
+```powershell
 uv run python scripts/init_db.py
 ```
 
+## テスト
+
+### 全問テスト
+
+まず、教材と参照解答が正常であることを確認します。
+
+```powershell
+uv run python -m unittest discover -s tests -v
+```
+
+自分の解答をテストするには対象モジュールを切り替えます。
+
+```powershell
+$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
+uv run python -m unittest tests.test_queries -v
+```
+
+未回答の関数には `TODO` があるため、契約テストは未回答数を表示して失敗します。
+まず問題を実装し、問題一覧と失敗した `subTest` の番号を照合してください。
+
+標準の高速テストはデータベースを必要とせず、関数の存在、戻り値、
+命令の種類、パラメータ化を検査します。SQLとしての実行結果は次の統合テストで
+参照解答と比較します。
+
 SQL Server に対して参照解答の検索問題を実行するには:
 
-```bash
+```powershell
 $env:SQLSERVER_TESTS = "1"
 uv run python -m unittest tests.test_database -v
-
 ```
 
 自分の解答を実行するには:
-
-```bash
-$env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
-uv run python -m unittest tests.test_database -v
-```
-README中の環境変数を伴うコマンドは Bash 用です。Windows PowerShell では
-次のように環境変数を設定してから実行します。
 
 ```powershell
 $env:SQLSERVER_TESTS = "1"
@@ -97,13 +91,13 @@ $env:SQL_EXAM_MODULE = "sqlquery_exam.exercises"
 uv run python -m unittest tests.test_database -v
 ```
 
-## 各問題のテスト方法
+### 各問題テスト
 
 検索問題（問題1〜20）は、回答した関数だけを実行して結果を確認できます。
 次の `q01_select_all_products` を、`catalog.py` にある確認したい問題の関数名に
 置き換えてください。
 
-```bash
+```powershell
 uv run python -c "from sqlquery_exam.db import fetch_all; from sqlquery_exam.exercises import q01_select_all_products; print(*fetch_all(q01_select_all_products()), sep='\n')"
 ```
 
@@ -114,7 +108,7 @@ SQL Serverで実行し、取得した各行を表示します。実行前に「�
 
 また、以下のコマンドより全選択時のラベルを出力、現在の問題との比較を行い、ソートの正確性を確認してください。
 
-```bash
+```powershell
 uv run python -c "from sqlquery_exam.db import fetch_all; print(*fetch_all('SELECT * FROM Products'), sep='\n')"
 ```
 

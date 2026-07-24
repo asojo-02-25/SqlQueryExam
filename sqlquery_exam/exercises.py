@@ -110,8 +110,15 @@ def q15_large_order_customers() -> str:
     HAVING SUM(OD.Quantity * OD.UnitPrice) >= 10000;
     """
 
-def q16_products_above_average_price() -> str: return _todo(16)
-def q17_customers_without_orders() -> str: return _todo(17)
+def q16_products_above_average_price() -> str: 
+    return """
+    SELECT * FROM Products WHERE UnitPrice > (SELECT AVG(UnitPrice) FROM Products);
+    """
+
+def q17_customers_without_orders() -> str: 
+    return """
+    
+    """
 def q18_rank_products_by_category() -> str: return _todo(18)
 def q19_monthly_sales() -> str: return _todo(19)
 def q20_customer_sales_summary() -> str: return _todo(20)
