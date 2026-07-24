@@ -90,7 +90,11 @@ def q12_order_detail_report() -> str:
 
 def q13_product_count_by_category() -> str: 
     return """
-    SELECT CategoryId, CategoryName, COUNT(*) AS ProductCount FROM Products GROUP BY CategoryId;
+    SELECT C.CategoryId, C.CategoryName, COUNT(P.ProductId) AS ProductCount 
+    FROM Categories AS C
+    LEFT JOIN Products AS P
+    ON C.CategoryId = P.CategoryId
+    GROUP BY C.CategoryId, C.CategoryName;
     """
 
 def q14_order_total_by_order() -> str: 
@@ -106,19 +110,23 @@ def q15_large_order_customers() -> str:
     ON C.CustomerId = O.CustomerId
     JOIN OrderDetails AS OD
     ON O.OrderId = OD.OrderId
-    GROUP BY C.CustomerId
+    GROUP BY C.CustomerId, C.LastName, C.FirstName
     HAVING SUM(OD.Quantity * OD.UnitPrice) >= 10000;
     """
 
 def q16_products_above_average_price() -> str: 
     return """
-    SELECT * FROM Products WHERE UnitPrice > (SELECT AVG(UnitPrice) FROM Products);
+    SELECT ProductId, ProductName, UnitPrice FROM Products WHERE UnitPrice > (SELECT AVG(UnitPrice) FROM Products);
     """
 
 def q17_customers_without_orders() -> str: 
     return """
-    
+    SELECT CustomerId, LastName, FirstName FROM Customers AS C
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Orders AS O
+        WHERE O.CustomerId = C.CustomerId);  
     """
+
 def q18_rank_products_by_category() -> str: return _todo(18)
 def q19_monthly_sales() -> str: return _todo(19)
 def q20_customer_sales_summary() -> str: return _todo(20)
