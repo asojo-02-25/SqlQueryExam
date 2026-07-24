@@ -370,3 +370,23 @@ UPDATE 学部 SET ID = 'K' WHERE ID = 'R'
 COMMIT;
 
 DROP TABLE 学生;
+
+-- 11.5 練習問題
+
+-- 11-2
+
+-- 2.
+GO;
+
+CREATE VIEW 学生情報ビュー AS 
+    SELECT S.学籍番号, S.名前, S.生年月日, B.学部名, S.血液型 
+    FROM 学生 AS S
+    JOIN 学部 AS B
+    ON S.学部ID = B.ID;
+
+GO;
+
+SELECT * FROM 学生情報ビュー
+
+-- 3. 
+INSERT INTO 学生 VALUES('B1101022', '古島 進', '2004-02-12', 'A', 'K', (SELECT NEXTVAL('ISTD')))
