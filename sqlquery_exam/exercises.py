@@ -218,11 +218,65 @@ def q22_insert_discounted_products() -> str:
         );
     """
 
-def q23_update_inactive_products() -> str: return _todo(23)
-def q24_update_category_prices() -> str: return _todo(24)
-def q25_delete_expired_discounts() -> str: return _todo(25)
-def q26_delete_customers_without_orders() -> str: return _todo(26)
-def q27_upsert_inventory() -> str: return _todo(27)
+def q23_update_inactive_products() -> str: 
+    return """
+    UPDATE Products 
+    SET IsActive = 0
+    WHERE StockQuantity = 0; 
+    """
+
+def q24_update_category_prices() -> str: 
+    return """
+    UPDATE P
+    SET P.UnitPrice = ROUND(p.UnitPrice * 1.10, 2)
+    FROM Products AS P
+    JOIN Categories AS C
+        ON P.CategoryId = C.CategoryId
+    WHERE CategoryName = N'Books';
+    """
+
+def q25_delete_expired_discounts() -> str: 
+    return """
+    DELETE FROM ProductDiscounts 
+    WHERE EndDate < CAST(GETDATE() as date);
+    """
+
+def q26_delete_customers_without_orders() -> str: 
+    return """
+    DELETE C FROM Customers AS C
+    LEFT JOIN Orders AS O
+        ON C.CustomerId = O.CustomerId
+    WHERE 
+        (C.IsActive = 0 AND OrderId IS NULL);
+    """
+
+def q27_upsert_inventory() -> str: 
+    return """
+    MERGE Products AS target
+    USING InventoryImport AS source
+    ON target.ProductId = source.ProductID
+    WHEN MATCHED THEN
+        UPDATE SET 
+            target.StockQuantity = source.StockQuantity
+    WHEN NOT MATCHED BY TARGET THEN
+        INSERT (
+            ProductId, 
+            ProductName,
+            CategoryId, 
+            UnitPrice,
+            StockQuantity,
+            IsActive
+        )
+        VALUES (
+            source.ProductId, 
+            source.ProductName,
+            source.CategoryId, 
+            source.UnitPrice,
+            source.StockQuantity,
+            1
+        );
+    """
+
 def q28_best_selling_product_per_category() -> str: return _todo(28)
 def q29_customer_order_interval() -> str: return _todo(29)
 def q30_sales_dashboard() -> str: return _todo(30)
