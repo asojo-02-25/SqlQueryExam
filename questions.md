@@ -23,11 +23,37 @@
 - `Products` の全列を取得してください。
 - `ProductId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題02：列の選択
 
 - 関数：`q02_select_product_columns`
 - 出力列は、順に `ProductName`、`UnitPrice` としてください。
 - `ProductName` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
 
 ### 問題03：販売中の商品
 
@@ -36,12 +62,38 @@
 - 出力列は、順に `ProductId`、`ProductName`、`UnitPrice` としてください。
 - `ProductId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題04：価格範囲
 
 - 関数：`q04_products_in_price_range`
 - `UnitPrice` が1000以上5000以下の商品を対象にしてください。両端を含みます。
 - 出力列は、順に `ProductId`、`ProductName`、`UnitPrice` としてください。
 - `UnitPrice` の降順、同額の場合は `ProductId` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
 
 ### 問題05：商品名検索
 
@@ -50,6 +102,19 @@
 - 出力列は、順に `ProductId`、`ProductName` としてください。
 - `ProductId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題06：都市の重複除去
 
 - 関数：`q06_distinct_customer_cities`
@@ -57,11 +122,36 @@
 - `NULL` は除外してください。
 - 出力列は `City` のみとし、その昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+```
+
 ### 問題07：直近の注文
 
 - 関数：`q07_recent_orders`
 - `Orders` の全列を、直近の5件だけ取得してください。
 - `OrderDate` の降順、日時が同じ場合は `OrderId` の降順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+```
 
 ### 問題08：顧客表示名
 
@@ -69,6 +159,20 @@
 - 出力列は、順に `CustomerId`、`DisplayName` としてください。
 - `DisplayName` は「姓、半角スペース、名」の順で連結してください。
 - `CustomerId` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+```
 
 ### 問題09：注文明細金額
 
@@ -79,6 +183,18 @@
 - `LineAmount` は数量と明細単価の積です。
 - `OrderId` の昇順、同じ注文内では `ProductId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
+
 ## 結合
 
 ### 問題10：商品とカテゴリ
@@ -87,6 +203,24 @@
 - `Products` と、その商品が属する `Categories` を結合してください。
 - 出力列は、順に `ProductId`、`ProductName`、`CategoryName` としてください。
 - `ProductId` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Categories (
+    CategoryId int IDENTITY(1, 1) PRIMARY KEY,
+    CategoryName nvarchar(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
 
 ### 問題11：顧客と注文
 
@@ -98,6 +232,27 @@
   並べてください。
 - 注文がない顧客の注文側の列は `NULL` になります。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+```
+
 ### 問題12：注文明細レポート
 
 - 関数：`q12_order_detail_report`
@@ -108,6 +263,34 @@
 - `LineAmount` は数量と明細単価の積です。
 - `OrderId` の昇順、同じ注文内では `ProductId` の昇順に並べてください。
   `ProductId` は並べ替えに使用しますが、出力列には含めません。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
 
 ## 集計
 
@@ -122,6 +305,24 @@
   `0` としてください。
 - `CategoryId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Categories (
+    CategoryId int IDENTITY(1, 1) PRIMARY KEY,
+    CategoryName nvarchar(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題14：注文別の合計金額
 
 - 関数：`q14_order_total_by_order`
@@ -129,6 +330,25 @@
 - 注文単位で、数量と明細単価の積を合計してください。
 - 出力列は、順に `OrderId`、`OrderTotal` としてください。
 - `OrderId` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
 
 ### 問題15：購入額が10000以上の顧客
 
@@ -140,6 +360,35 @@
   してください。
 - `TotalAmount` の降順、同額の場合は `CustomerId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
+
 ## 応用
 
 ### 問題16：平均単価より高い商品
@@ -150,12 +399,46 @@
 - 出力列は、順に `ProductId`、`ProductName`、`UnitPrice` としてください。
 - `UnitPrice` の降順、同額の場合は `ProductId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題17：注文履歴がない顧客
 
 - 関数：`q17_customers_without_orders`
 - `Orders` に1件も注文が存在しない顧客を対象にしてください。
 - 出力列は、順に `CustomerId`、`LastName`、`FirstName` としてください。
 - `CustomerId` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+```
 
 ### 問題18：カテゴリ内の価格順位
 
@@ -166,6 +449,19 @@
   `PriceRank` としてください。
 - `CategoryId`、`PriceRank`、`ProductId` の順ですべて昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題19：月別売上
 
 - 関数：`q19_monthly_sales`
@@ -174,6 +470,25 @@
 - 合計額の列名は `SalesAmount` としてください。
 - 出力列は、順に `SalesMonth`、`SalesAmount` としてください。
 - `SalesMonth` の昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
 
 ### 問題20：顧客別売上集計
 
@@ -186,6 +501,35 @@
   `TotalAmount` としてください。
 - `TotalAmount` の降順、同額の場合は `CustomerId` の昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
+
 ## 更新
 
 ### 問題21：顧客の追加
@@ -197,6 +541,20 @@
   `%(email)s`、`%(first_name)s`、`%(last_name)s`、`%(city)s` を使用してください。
 - `CustomerId`、`IsActive`、`CreatedAt` はデータベース側の既定値に任せます。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+```
+
 ### 問題22：高額商品の割引追加
 
 - 関数：`q22_insert_discounted_products`
@@ -206,12 +564,47 @@
 - 今日が開始日から終了日までの範囲内にある割引が、その商品にすでに存在する場合は
   追加しないでください。日付範囲は両端を含みます。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+
+CREATE TABLE ProductDiscounts (
+    DiscountId int IDENTITY(1, 1) PRIMARY KEY,
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    DiscountRate decimal(5, 4) NOT NULL CHECK (DiscountRate > 0 AND DiscountRate < 1),
+    StartDate date NOT NULL,
+    EndDate date NOT NULL,
+    CHECK (StartDate <= EndDate)
+);
+```
+
 ### 問題23：在庫切れ商品の販売停止
 
 - 関数：`q23_update_inactive_products`
 - `StockQuantity` が `0` の商品だけを対象にしてください。
 - 対象商品の `IsActive` を `0` に更新してください。
 - その他の列は変更しないでください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
 
 ### 問題24：Booksカテゴリの値上げ
 
@@ -222,12 +615,43 @@
 - 更新後の価格は小数第2位に丸めてください。
 - その他のカテゴリと列は変更しないでください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Categories (
+    CategoryId int IDENTITY(1, 1) PRIMARY KEY,
+    CategoryName nvarchar(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+```
+
 ### 問題25：期限切れ割引の削除
 
 - 関数：`q25_delete_expired_discounts`
 - `ProductDiscounts` のうち、`EndDate` がSQL Server上の今日より前の行を
   削除してください。
 - 終了日が今日の割引は削除しないでください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE ProductDiscounts (
+    DiscountId int IDENTITY(1, 1) PRIMARY KEY,
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    DiscountRate decimal(5, 4) NOT NULL CHECK (DiscountRate > 0 AND DiscountRate < 1),
+    StartDate date NOT NULL,
+    EndDate date NOT NULL,
+    CHECK (StartDate <= EndDate)
+);
+```
 
 ### 問題26：注文履歴がない非アクティブ顧客の削除
 
@@ -236,6 +660,27 @@
   削除してください。
 - 非アクティブでも注文履歴がある顧客、およびアクティブな顧客は削除しないで
   ください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Customers (
+    CustomerId int IDENTITY(1, 1) PRIMARY KEY,
+    Email nvarchar(255) NOT NULL UNIQUE,
+    FirstName nvarchar(50) NOT NULL,
+    LastName nvarchar(50) NOT NULL,
+    City nvarchar(100) NULL,
+    IsActive bit NOT NULL CONSTRAINT DF_Customers_IsActive DEFAULT 1,
+    CreatedAt datetime2 NOT NULL CONSTRAINT DF_Customers_CreatedAt DEFAULT SYSDATETIME()
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+```
 
 ### 問題27：在庫データの反映
 
@@ -247,6 +692,27 @@
 - 存在しない場合は、`ProductId`、`ProductName`、`CategoryId`、`UnitPrice`、
   `StockQuantity` を入力側から追加し、`IsActive` は `1` としてください。
 - 入力側に存在しない既存商品は、更新も削除もしないでください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+
+CREATE TABLE InventoryImport (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL,
+    UnitPrice decimal(10, 2) NOT NULL,
+    StockQuantity int NOT NULL
+);
+```
 
 ## 発展
 
@@ -262,6 +728,32 @@
   `SalesAmount` としてください。順位そのものは出力しません。
 - `CategoryId`、`ProductId` の順ですべて昇順に並べてください。
 
+#### 参照テーブル
+
+```sql
+CREATE TABLE Categories (
+    CategoryId int IDENTITY(1, 1) PRIMARY KEY,
+    CategoryName nvarchar(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
+
 ### 問題29：顧客の注文間隔
 
 - 関数：`q29_customer_order_interval`
@@ -275,6 +767,17 @@
   `DaysSincePreviousOrder` を `NULL` としてください。
 - 最終結果も `CustomerId`、`OrderDate`、`OrderId` の順ですべて昇順に
   並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+```
 
 ### 問題30：月・カテゴリ別売上ダッシュボード
 
@@ -294,3 +797,36 @@
 - 出力列は、順に `SalesMonth`、`CategoryId`、`CategoryName`、
   `SalesAmount`、`PreviousMonthAmount`、`GrowthRatePercent` としてください。
 - `SalesMonth`、`CategoryId` の順ですべて昇順に並べてください。
+
+#### 参照テーブル
+
+```sql
+CREATE TABLE Categories (
+    CategoryId int IDENTITY(1, 1) PRIMARY KEY,
+    CategoryName nvarchar(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE Products (
+    ProductId int PRIMARY KEY,
+    ProductName nvarchar(200) NOT NULL,
+    CategoryId int NOT NULL REFERENCES Categories(CategoryId),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    StockQuantity int NOT NULL CHECK (StockQuantity >= 0),
+    IsActive bit NOT NULL CONSTRAINT DF_Products_IsActive DEFAULT 1
+);
+
+CREATE TABLE Orders (
+    OrderId int IDENTITY(1, 1) PRIMARY KEY,
+    CustomerId int NOT NULL REFERENCES Customers(CustomerId),
+    OrderDate datetime2 NOT NULL,
+    Status varchar(20) NOT NULL CHECK (Status IN ('Pending', 'Paid', 'Shipped', 'Cancelled'))
+);
+
+CREATE TABLE OrderDetails (
+    OrderId int NOT NULL REFERENCES Orders(OrderId),
+    ProductId int NOT NULL REFERENCES Products(ProductId),
+    Quantity int NOT NULL CHECK (Quantity > 0),
+    UnitPrice decimal(10, 2) NOT NULL CHECK (UnitPrice >= 0),
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (OrderId, ProductId)
+);
+```
