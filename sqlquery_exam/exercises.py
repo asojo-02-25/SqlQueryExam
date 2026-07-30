@@ -142,17 +142,102 @@ def q17_customers_without_orders() -> str:
     ORDER BY CustomerId ASC; 
     """
 
-def q18_rank_products_by_category() -> str: return _todo(18)
-def q19_monthly_sales() -> str: return _todo(19)
-def q20_customer_sales_summary() -> str: return _todo(20)
-
+def q18_rank_products_by_category() -> str: 
+    return """
+    SELECT 
+        ProductId, 
+        ProductName, 
+        CategoryId, 
+        UnitPrice, 
+        DENSE_RANK() OVER(
+            PARTITION BY CategoryId
+            ORDER BY UnitPrice DESC
+        ) AS PriceRank 
+    FROM Products
+    ORDER BY 
+        CategoryId, 
+        PriceRank,
+        ProductId;
+    """
+def q19_monthly_sales() -> str: 
+    return """
+    SELECT 
+        CONVERT(char(7), O.Orderdate, 120) AS SalesMonth,
+        SUM(Quantity * UnitPrice) AS SalesAmount
+    FROM Orders AS O
+    JOIN OrderDetails AS OD
+        ON O.OrderId = OD.OrderId
+    GROUP BY CONVERT(char(7), O.Orderdate, 120)
+    ORDER BY CONVERT(char(7), O.Orderdate, 120);
+    """
+def q20_customer_sales_summary() -> str: 
+    return """
+    WITH CustomerSalesSummary AS (
+        SELECT 
+            C.CustomerId, 
+            C.LastName, 
+            C.FirstName, 
+            COALESCE(COUNT(DISTINCT O.OrderId), 0) AS OrderCount, 
+            COALESCE(SUM(OD.Quantity * OD.UnitPrice), 0) AS TotalAmount
+        FROM Customers AS C
+        LEFT JOIN Orders AS O
+            ON C.CustomerId = O.CustomerId
+        LEFT JOIN OrderDetails AS OD
+            ON O.OrderId = OD.OrderId
+        GROUP BY 
+            C.CustomerId, 
+            C.LastName, 
+            C.FirstName
+    )
+    SELECT * 
+    FROM CustomerSalesSummary
+    ORDER BY 
+        TotalAmount DESC,
+        CustomerId ASC; 
+    """
 
 def q21_insert_customer() -> str:
     """Use parameters: %(email)s, %(first_name)s, %(last_name)s, %(city)s."""
-    return _todo(21)
+    return """
+    INSERT INTO Customers (
+        Email, 
+        FirstName, 
+        LastName, 
+        City
+    )
+    VALUES (
+        %(email)s, 
+        %(first_name)s,
+        %(last_name)s, 
+        %(city)s
+    )
 
+    """
 
-def q22_insert_discounted_products() -> str: return _todo(22)
+def q22_insert_discounted_products() -> str: 
+    return """
+    INSERT INTO ProductDiscounts(
+        ProductId, 
+        DiscountRate,
+        StartDate,
+        EndDate
+    )
+    SELECT
+        P.ProductId, 
+        0.10,
+        CAST(GETDATE() AS date),
+        DATEADD(day, 30, CAST(GETDATE() AS date))
+    FROM Products AS P
+    WHERE 
+        UnitPrice >= 5000 AND
+        NOT EXISTS (
+            SELECT 1
+            FROM ProductDiscounts AS PD
+            WHERE 
+                PD.ProductId = P.ProductId AND
+                CAST(GETDATE() AS date) BETWEEN PD.StartDate AND PD.EndDate
+        ); 
+    """
 def q23_update_inactive_products() -> str: return _todo(23)
 def q24_update_category_prices() -> str: return _todo(24)
 def q25_delete_expired_discounts() -> str: return _todo(25)
