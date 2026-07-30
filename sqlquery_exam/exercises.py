@@ -277,6 +277,47 @@ def q27_upsert_inventory() -> str:
         );
     """
 
-def q28_best_selling_product_per_category() -> str: return _todo(28)
+def q28_best_selling_product_per_category() -> str: 
+    return """
+    WITH ProductSales AS(
+        SELECT  
+            od.ProductId,
+            COALESCE(SUM(od.Quantity * od.UnitPrice), 0) AS SalesAmount
+        FROM OrderDetails AS od
+        GROUP BY  
+            od.ProductId
+    ),
+    AllProductSales AS(
+        SELECT
+            p.ProductId, 
+            p.ProductName,
+            c.CategoryId,
+            c.CategoryName,
+            ps.SalesAmount
+        FROM ProductSales AS ps
+        JOIN Products AS p
+            ON ps.ProductId = p.ProductId
+        JOIN Categories AS c
+            ON p.CategoryId = c.CategoryId
+    ),
+    RankedSales AS(
+        SELECT
+            *, 
+            DENSE_RANK()OVER(
+                PARTITION BY CategoryId
+                ORDER BY SalesAmount DESC
+            ) AS SalesRank
+        FROM AllProductSales
+    )
+    SELECT 
+        CategoryId, 
+        CategoryName,
+        ProductId,
+        ProductName,
+        SalesAmount
+    FROM RankedSales
+    WHERE SalesRank = 1
+    ORDER BY CategoryId, ProductId;
+    """
 def q29_customer_order_interval() -> str: return _todo(29)
 def q30_sales_dashboard() -> str: return _todo(30)
