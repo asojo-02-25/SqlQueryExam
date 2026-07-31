@@ -238,11 +238,66 @@ def q22_insert_discounted_products() -> str:
                 CAST(GETDATE() AS date) BETWEEN PD.StartDate AND PD.EndDate
         ); 
     """
-def q23_update_inactive_products() -> str: return _todo(23)
-def q24_update_category_prices() -> str: return _todo(24)
-def q25_delete_expired_discounts() -> str: return _todo(25)
-def q26_delete_customers_without_orders() -> str: return _todo(26)
-def q27_upsert_inventory() -> str: return _todo(27)
+def q23_update_inactive_products() -> str: 
+    return """
+    UPDATE Products 
+    SET IsActive = 0
+    WHERE StockQuantity = 0;
+    """
+
+def q24_update_category_prices() -> str: 
+    return """
+    UPDATE p
+    SET p.UnitPrice = ROUND(p.UnitPrice * 1.10, 2)
+    FROM Products AS p
+    JOIN Categories AS c
+        ON p.CategoryId = c.CategoryId
+    WHERE CategoryName = N'Books'
+    """
+
+def q25_delete_expired_discounts() -> str: 
+    return """
+    DELETE FROM productDiscounts
+    WHERE EndDate < CAST(GETDATE() AS date);
+    """
+
+def q26_delete_customers_without_orders() -> str: 
+    return """
+    DELETE c 
+    FROM Customers AS c
+    WHERE 
+        IsActive = 0
+        AND NOT EXISTS(
+            SELECT 1 
+            FROM Orders AS o
+            WHERE o.CustomerID = c.CustomerId
+        );
+    """
+
+def q27_upsert_inventory() -> str: 
+    return """
+    MERGE INTO Products AS target
+    USING InventoryImport AS source
+        ON target.ProductId = source.ProductId
+    WHEN MATCHED THEN 
+        UPDATE SET
+        target.StockQuantity = source.StockQuantity
+    WHEN NOT MATCHED BY target THEN
+        INSERT (
+            ProductId, 
+            ProductName, 
+            CategoryId, 
+            UnitPrice, 
+            StockQuantity
+        )
+        VALUES(
+            source.ProductId, 
+            source.ProductName, 
+            source.CategoryId, 
+            source.UnitPrice, 
+            source.StockQuantity
+        )
+    """
 def q28_best_selling_product_per_category() -> str: return _todo(28)
 def q29_customer_order_interval() -> str: return _todo(29)
 def q30_sales_dashboard() -> str: return _todo(30)
