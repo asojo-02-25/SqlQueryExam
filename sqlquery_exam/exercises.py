@@ -298,6 +298,140 @@ def q27_upsert_inventory() -> str:
             source.StockQuantity
         )
     """
-def q28_best_selling_product_per_category() -> str: return _todo(28)
-def q29_customer_order_interval() -> str: return _todo(29)
-def q30_sales_dashboard() -> str: return _todo(30)
+def q28_best_selling_product_per_category() -> str: 
+    return """
+    WITH CalculateSalesAmount AS (
+        SELECT 
+            ProductId,
+            SUM(Quantity * UnitPrice) AS SalesAmount
+        FROM OrderDetails
+        GROUP BY 
+            ProductId
+    ),
+    BOUND AS (
+        SELECT 
+            c.CategoryId,
+            c.CategoryName,
+            p.ProductId,
+            p.ProductName,
+            COALESCE(csa.SalesAmount, 0) AS SalesAmount
+        FROM Products AS p
+        LEFT JOIN CalculateSalesAmount AS csa
+            ON csa.ProductId = p.ProductId
+        JOIN Categories AS c
+            ON p.CategoryId = c.CategoryId
+    ), 
+    Ranked AS (
+        SELECT 
+            b.CategoryId,
+            b.CategoryName,
+            b.ProductId,
+            b.ProductName,
+            b.SalesAmount,
+            DENSE_RANK () OVER (
+                PARTITION BY CategoryId
+                ORDER BY SalesAmount DESC
+            ) AS SalesRank
+        FROM BOUND AS b
+    )
+    SELECT
+        r.CategoryId,
+        r.CategoryName,
+        r.ProductId,
+        r.ProductName,
+        r.SalesAmount
+    FROM Ranked AS r
+    WHERE r.SalesRank = 1
+    ORDER BY
+        CategoryId, 
+        ProductId;
+    """
+
+def q29_customer_order_interval() -> str: 
+    return """
+    WITH PreviousAndCurrentOrderDate AS (
+        SELECT 
+            CustomerId, 
+            OrderId, 
+            OrderDate,
+            LAG(OrderDate) OVER (
+                PARTITION BY CustomerId
+                ORDER BY 
+                    OrderDate, 
+                    OrderId
+            ) AS PreviousOrderDate
+        FROM Orders
+    ),
+    OrderInterval AS (
+        SELECT 
+            od.CustomerId, 
+            od.OrderId, 
+            od.OrderDate,
+            od.PreviousOrderDate,
+            DATEDIFF (
+                day,
+                PreviousOrderDate,
+                OrderDate
+            ) AS DaysSincePreviousOrder
+        FROM PreviousAndCurrentOrderDate AS od
+    )
+    SELECT oi.* 
+    FROM OrderInterval AS oi
+    ORDER BY 
+        CustomerId,
+        OrderDate,
+        OrderId;
+    """
+def q30_sales_dashboard() -> str: 
+    return """
+    WITH Month as (
+        SELECT 
+            OrderId,
+            DATEFROMPARTS(
+                YEAR(o.OrderDate), 
+                MONTH(o.OrderDate), 
+                1
+            ) AS SalesMonth
+        FROM Orders AS o
+    ),
+    SalesAmount AS (
+        SELECT
+            m.SalesMonth,
+            c.CategoryId,
+            c.CategoryName,
+            SUM(od.Quantity * od.UnitPrice) AS SalesAmount
+        FROM Month AS m
+        JOIN OrderDetails AS od
+            ON m.OrderId = od.OrderID
+        JOIN Products AS p
+            ON od.ProductId = p.ProductId
+        JOIN Categories AS c
+            ON p.CategoryId = c.CategoryId
+        GROUP BY 
+            m.SalesMonth,
+            c.CategoryId,
+            c.CategoryName
+    ),
+    PreviousSales AS (
+        SELECT 
+            sa.SalesMonth,
+            sa.CategoryId,
+            sa.CategoryName,
+            sa.SalesAmount,
+            LAG(SalesAmount) OVER (
+                PARTITION BY CategoryId
+                ORDER BY SalesMonth
+            ) AS PreviousMonthAmount
+        FROM SalesAmount AS sa
+    )
+    SELECT 
+        ps.*, 
+        CONVERT(
+            decimal(10, 2),
+            ((SalesAmount - PreviousMonthAmount) / NULLIF(PreviousMonthAmount, 0) * 100)            
+        ) AS GrowthRatePercent 
+    FROM PreviousSales AS ps
+    ORDER BY 
+        SalesMonth,
+        CategoryId;
+    """
