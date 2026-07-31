@@ -319,5 +319,76 @@ def q28_best_selling_product_per_category() -> str:
     WHERE SalesRank = 1
     ORDER BY CategoryId, ProductId;
     """
-def q29_customer_order_interval() -> str: return _todo(29)
-def q30_sales_dashboard() -> str: return _todo(30)
+def q29_customer_order_interval() -> str: 
+    return """
+    WITH CustomerOrderInterval AS (
+        SELECT 
+            CustomerId,
+            OrderId,
+            OrderDate,
+            LAG (OrderDate) OVER (
+                PARTITION BY CustomerId
+                ORDER BY OrderID, OrderDate
+            ) AS PreviousOrderDate,
+            DATEDIFF(
+                day, 
+                LAG (OrderDate) OVER (
+                    PARTITION BY CustomerId
+                    ORDER BY OrderID, OrderDate
+                ), 
+                OrderDate
+            ) AS DaysSincePreviousOrder
+        FROM Orders
+    )   
+    SELECT * 
+    FROM CustomerOrderInterval
+    ORDER BY 
+        CustomerId, 
+        OrderDate,
+        OrderId;
+    """
+def q30_sales_dashboard() -> str: 
+    return """
+    WITH Bounded AS (
+        SELECT 
+            DATEFROMPARTS(YEAR(o.OrderDate), MONTH(o.OrderDate), 1) AS SalesMonth,
+            c.CategoryId,
+            c.CategoryName,
+            SUM(od.Quantity * od.UnitPrice) AS SalesAmount,
+            LAG (SUM(od.Quantity * od.UnitPrice)) OVER (
+                PARTITION BY c.CategoryId
+                ORDER BY 
+                    DATEFROMPARTS(YEAR(o.OrderDate), MONTH(o.OrderDate), 1),
+                    c.CategoryId
+            ) AS PreviousMonthAmount
+        FROM Categories AS c
+        JOIN Products AS p
+            ON c.CategoryId = p.CategoryId
+        JOIN OrderDetails AS od
+            ON p.ProductId = od.ProductId
+        JOIN Orders AS o
+            ON od.OrderID = o.OrderID
+        GROUP BY
+            DATEFROMPARTS(YEAR(o.OrderDate), MONTH(o.OrderDate), 1),
+            c.CategoryId,
+            c.CategoryName
+    ),
+    SalesDashboard AS (
+        SELECT
+            b.SalesMonth,
+            b.CategoryId,
+            b.CategoryName,
+            b.SalesAmount,
+            b.PreviousMonthAmount,
+            CONVERT(
+                decimal(10, 2),
+                ((b.SalesAmount - b.PreviousMonthAmount) / b.PreviousMonthAmount * 100)
+            ) AS GrowthRatePercent
+        FROM Bounded AS b
+    )
+    SELECT * 
+    FROM SalesDashBoard
+    ORDER BY
+        SalesMonth, 
+        CategoryId 
+    """
